@@ -8,11 +8,7 @@ entity jelly_16 is
     port (
         clk : in std_logic;
         rst : in std_logic;
-        data_in : in std_logic_vector(15 downto 0);
-        ;
-        ;
-        ;
-        ;
+        data_in : in std_logic_vector(15 downto 0)
     );
 end entity jelly_16;
 
