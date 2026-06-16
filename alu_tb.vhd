@@ -8,8 +8,8 @@ END alu_tb;
 ARCHITECTURE sim OF alu_tb IS
 
 	-- Opcodes (must match alu.vhd)
-	CONSTANT OP_ADD : std_logic_vector(3 DOWNTO 0) := "0110";
-	CONSTANT OP_SUB : std_logic_vector(3 DOWNTO 0) := "0111";
+	CONSTANT OP_ADD : std_logic_vector(3 DOWNTO 0) := "1000";
+	CONSTANT OP_SUB : std_logic_vector(3 DOWNTO 0) := "1001";
 
 	CONSTANT CLK_PERIOD : time := 10 ns;
 
