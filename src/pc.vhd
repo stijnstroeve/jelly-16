@@ -10,8 +10,10 @@ entity pc is
     );
     port (
         clk : in std_logic;
-        rst : in std_logic; -- synchronous reset to 0
-        stall : in std_logic; -- 1 = hold current address
+        rst : in std_logic;
+        
+        hold : in std_logic; -- 1 = hold current address
+
         branch : in std_logic; -- 1 = load branch_target
         branch_target : in std_logic_vector(ADDR_WIDTH - 1 downto 0); -- target for taken branch/jump
 
@@ -25,14 +27,14 @@ begin
     process (clk) is
     begin
         if rising_edge(clk) then
-            if rst = '1' then
+            if rst = '0' then
                 pc_reg <= (others => '0');
-            elsif stall = '1' then
-                pc_reg <= pc_reg; -- hold
+            elsif hold = '1' then
+                pc_reg <= pc_reg; -- hold current address
             elsif branch = '1' then
-                pc_reg <= unsigned(branch_target); -- jump / taken branch
+                pc_reg <= unsigned(branch_target); -- load branch target
             else
-                pc_reg <= pc_reg + 1; -- sequential fetch (word-addressed)
+                pc_reg <= pc_reg + 1; -- increment to next instruction
             end if;
         end if;
     end process;
