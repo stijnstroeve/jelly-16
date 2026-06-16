@@ -11,7 +11,7 @@ entity pc is
     port (
         clk : in std_logic;
         rst : in std_logic;
-        
+
         hold : in std_logic; -- 1 = hold current address
 
         branch : in std_logic; -- 1 = load branch_target
