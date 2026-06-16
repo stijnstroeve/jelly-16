@@ -49,7 +49,7 @@ BEGIN
 				akku := resize(unsigned(a), 17) + resize(unsigned(b), 17);
 			-- CMP is the same as SUB but we discard the result and only care about flags.
 			when OP_SUB | OP_CMP =>
-				akku := resize(unsigned(a), 17) + resize(unsigned(not b), 17) + 1;
+				akku := resize(unsigned(a), 17) + (not resize(unsigned(b), 17)) + 1;
 			when OP_AND =>
 				akku := resize(unsigned(a and b), 17);
 			when OP_OR =>
