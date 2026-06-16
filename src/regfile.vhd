@@ -1,11 +1,12 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
+use work.jelly_pkg.all;
 
 entity regfile is
     generic (
-        DATA_WIDTH : integer := 16;
-        ADDR_WIDTH : integer := 4
+        DATA_WIDTH : integer := JELLY_DATA_WIDTH;
+        ADDR_WIDTH : integer := JELLY_REG_BITS
     );
     port (
         clk : in std_logic;

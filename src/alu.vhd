@@ -1,8 +1,7 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
-
-library work;
+use work.jelly_pkg.all;
 
 entity alu is
     port (
@@ -17,17 +16,6 @@ entity alu is
 end entity alu;
 
 architecture main of alu is
-
-    -- Opcodes
-    constant OP_ADD : std_logic_vector(3 downto 0) := "1000";
-    constant OP_SUB : std_logic_vector(3 downto 0) := "1001";
-    constant OP_AND : std_logic_vector(3 downto 0) := "1010";
-    constant OP_OR : std_logic_vector(3 downto 0) := "1011";
-    constant OP_XOR : std_logic_vector(3 downto 0) := "1100";
-    constant OP_SHL : std_logic_vector(3 downto 0) := "1101";
-    constant OP_SHR : std_logic_vector(3 downto 0) := "1110";
-    constant OP_CMP : std_logic_vector(3 downto 0) := "1111";
-
 begin
 
     process (clk, rst) is
