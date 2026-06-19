@@ -29,7 +29,7 @@ begin
     -- Device under test
     dut: entity work.sram
     generic map (
-        INIT_FILE => "data/tb_data.hex",
+        INIT_FILE => "programs/tb_data.hex",
         DATA_WIDTH => TB_DATA_WIDTH,
         ADDR_WIDTH => TB_ADDR_WIDTH
     )

@@ -17,25 +17,18 @@ architecture sim of alu_tb is
     constant OP_SHR : std_logic_vector(3 downto 0) := "1110";
     constant OP_CMP : std_logic_vector(3 downto 0) := "1111";
 
-    constant CLK_PERIOD : time := 10 ns;
-
     -- DUT signals
-    signal clk : std_logic := '0';
-    signal rst : std_logic := '0';
     signal a : std_logic_vector(15 downto 0) := (others => '0');
     signal b : std_logic_vector(15 downto 0) := (others => '0');
     signal op : std_logic_vector(3 downto 0) := (others => '0');
     signal result : std_logic_vector(15 downto 0);
     signal status : std_logic_vector(3 downto 0);
 
-    signal sim_done : boolean := false;
 begin
 
     -- Device under test
     dut: entity work.alu
     port map (
-        clk => clk,
-        rst => rst,
         a => a,
         b => b,
         op => op,
@@ -43,24 +36,11 @@ begin
         status => status
     );
 
-    -- Clock generation
-    clk_gen: process
-    begin
-        while not sim_done loop
-            clk <= '0';
-            wait for CLK_PERIOD / 2;
-            clk <= '1';
-            wait for CLK_PERIOD / 2;
-        end loop;
-        wait;
-    end process clk_gen;
-
     -- Stimulus and checking
     stim: process
 
-        -- Drive a + b through the ALU and check the registered result.
-        -- The result is captured on the rising edge, so apply inputs,
-        -- wait one clock, then compare.
+        -- The ALU is combinational: drive a, b and op, let the result settle
+        -- for a delta, then compare result and status.
         procedure check_op(
             constant opcode : in std_logic_vector(3 downto 0);
             constant in_a : in std_logic_vector(15 downto 0);
@@ -74,8 +54,6 @@ begin
             a <= in_a;
             b <= in_b;
             op <= opcode;
-            wait until rising_edge(clk);
-            -- Allow the registered output to settle after the edge.
             wait for 1 ns;
             assert result = expected report name & ": expected 0x" & to_hstring(unsigned(expected)) & " got 0x" & to_hstring(unsigned(result)) severity error;
             -- Status flags, bit order NZCO.
@@ -83,11 +61,6 @@ begin
         end procedure check_op;
 
     begin
-        -- Apply reset (active low) for a couple of cycles.
-        rst <= '0';
-        wait for 2 * CLK_PERIOD;
-        wait until rising_edge(clk);
-        rst <= '1';
 
         -- ===== Addition =====
         check_op(OP_ADD, x"0001", x"0001", x"0002", "0000", "ADD 1+1");
@@ -134,15 +107,12 @@ begin
         check_op(OP_SHR, "1111111111111111", x"0000", "0111111111111111", "0000", "SHR 1111 >> 1");
 
         -- ===== Compare =====
-        check_op(OP_ADD, x"0000", x"0000", x"0000", "0100", "ADD 0+0"); -- Repeat a test to ensure output of alu is 0
-
         check_op(OP_CMP, x"0001", x"0001", x"0000", "0100", "CMP 1==1");
-        check_op(OP_CMP, x"0010", x"0001", x"0000", "0000", "CMP 2==1");
-        check_op(OP_CMP, x"0001", x"0010", x"0000", "1010", "CMP 1==2");
+        check_op(OP_CMP, x"0010", x"0001", x"000F", "0000", "CMP 0x10 > 0x01");
+        check_op(OP_CMP, x"0001", x"0010", x"FFF1", "1010", "CMP 0x01 < 0x10");
         check_op(OP_CMP, x"0000", x"0000", x"0000", "0100", "CMP 0==0");
 
         report "ALU testbench completed" severity note;
-        sim_done <= true;
         wait;
     end process stim;
 

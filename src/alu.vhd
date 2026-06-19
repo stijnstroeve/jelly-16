@@ -4,90 +4,79 @@ use ieee.numeric_std.all;
 use work.jelly_pkg.all;
 
 entity alu is
+    generic (
+        DATA_WIDTH : integer := JELLY_DATA_WIDTH
+    );
     port (
-        clk : in std_logic;
-        rst : in std_logic;
-        a : in std_logic_vector(15 downto 0);
-        b : in std_logic_vector(15 downto 0);
+        a : in std_logic_vector(DATA_WIDTH - 1 downto 0);
+        b : in std_logic_vector(DATA_WIDTH - 1 downto 0);
         op : in std_logic_vector(3 downto 0);
-        result : out std_logic_vector(15 downto 0);
+        result : out std_logic_vector(DATA_WIDTH - 1 downto 0);
         status : out std_logic_vector(3 downto 0)
     );
 end entity alu;
 
 architecture main of alu is
 begin
-
-    process (clk, rst) is
-        -- 17-bit accumulator so bit 16 captures carry / borrow.
-        variable akku : unsigned(16 downto 0);
-        variable res : std_logic_vector(15 downto 0);
+    process (a, b, op) is
+        -- (DATA_WIDTH + 1)-bit accumulator so it captures carry / borrow
+        variable akku : unsigned(DATA_WIDTH downto 0);
+        variable res : std_logic_vector(DATA_WIDTH - 1 downto 0);
         variable n, z, c, o : std_logic;
 
     begin
-        -- RST should be active low. It resets the CPU.
-        if (rst = '0') then
-            result <= (others => '0');
-            status <= (others => '0');
-        elsif rising_edge(clk) then
+        -- ALU / Data Path
+        case op is
+            when OP_ADD =>
+                akku := resize(unsigned(a), DATA_WIDTH + 1) + resize(unsigned(b), DATA_WIDTH + 1);
+            -- CMP is the same as SUB; the datapath discards the result and keeps only the flags.
+            when OP_SUB | OP_CMP =>
+                akku := resize(unsigned(a), DATA_WIDTH + 1) + (not resize(unsigned(b), DATA_WIDTH + 1)) + 1;
+            when OP_AND =>
+                akku := resize(unsigned(a and b), DATA_WIDTH + 1);
+            when OP_OR =>
+                akku := resize(unsigned(a or b), DATA_WIDTH + 1);
+            when OP_XOR =>
+                akku := resize(unsigned(a xor b), DATA_WIDTH + 1);
+            when OP_SHL =>
+                akku := resize(unsigned(a), DATA_WIDTH + 1) sll 1;
+            when OP_SHR =>
+                akku := resize(unsigned(a), DATA_WIDTH + 1) srl 1;
+            when others =>
+                akku := (others => '0');
+        end case;
 
-            -- ALU / Data Path
-            case op is
-                when OP_ADD =>
-                    akku := resize(unsigned(a), 17) + resize(unsigned(b), 17);
-                    -- CMP is the same as SUB but we discard the result and only care about flags.
-                when OP_SUB | OP_CMP =>
-                    akku := resize(unsigned(a), 17) + (not resize(unsigned(b), 17)) + 1;
-                when OP_AND =>
-                    akku := resize(unsigned(a and b), 17);
-                when OP_OR =>
-                    akku := resize(unsigned(a or b), 17);
-                when OP_XOR =>
-                    akku := resize(unsigned(a xor b), 17);
-                when OP_SHL =>
-                    akku := resize(unsigned(a), 17) sll 1;
-                when OP_SHR =>
-                    akku := resize(unsigned(a), 17) srl 1;
-                when others =>
-                    akku := (others => '0');
-            end case;
+        res := std_logic_vector(akku(DATA_WIDTH - 1 downto 0));
+        result <= res;
 
-            res := std_logic_vector(akku(15 downto 0));
+        -- Status flags, bit order NZCO.
+        n := res(DATA_WIDTH - 1); -- N
+        if res = (res'range => '0') then
+            z := '1';
+        else
+            z := '0';
+        end if; -- Z
+        c := akku(DATA_WIDTH); -- C
 
-            -- CMP only updates the flags, so hold the previous result value.
-            if op /= OP_CMP then
-                result <= res;
-            end if;
-
-            -- Status flags, bit order NZCO.
-            n := res(15); -- N
-            if res = x"0000" then
-                z := '1';
-            else
-                z := '0';
-            end if; -- Z
-            c := akku(16); -- C
-
-            case op is
-                when OP_ADD =>
-                    -- overflow if both inputs share a sign and the result flips it
-                    if (a(15) = b(15)) and (res(15) /= a(15)) then
-                        o := '1';
-                    else
-                        o := '0';
-                    end if;
-                when OP_SUB | OP_CMP =>
-                    -- overflow if inputs differ in sign and result takes b's sign
-                    if (a(15) /= b(15)) and (res(15) /= a(15)) then
-                        o := '1';
-                    else
-                        o := '0';
-                    end if;
-                when others =>
+        case op is
+            when OP_ADD =>
+                -- Overflow if both inputs share a sign and the result flips it
+                if (a(DATA_WIDTH - 1) = b(DATA_WIDTH - 1)) and (res(DATA_WIDTH - 1) /= a(DATA_WIDTH - 1)) then
+                    o := '1';
+                else
                     o := '0';
-            end case;
+                end if;
+            when OP_SUB | OP_CMP =>
+                -- Overflow if inputs differ in sign and result takes b's sign
+                if (a(DATA_WIDTH - 1) /= b(DATA_WIDTH - 1)) and (res(DATA_WIDTH - 1) /= a(DATA_WIDTH - 1)) then
+                    o := '1';
+                else
+                    o := '0';
+                end if;
+            when others =>
+                o := '0';
+        end case;
 
-            status <= n & z & c & o;
-        end if;
+        status <= n & z & c & o;
     end process;
 end architecture main;

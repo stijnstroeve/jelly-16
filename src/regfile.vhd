@@ -38,7 +38,7 @@ begin
     process (clk) is
     begin
         if rising_edge(clk) then
-            if rst = '1' then
+            if rst = '0' then
                 regs <= (others => (others => '0'));
             elsif wr_en = '1' then
                 regs(to_integer(unsigned(wr_addr))) <= wr_data;
