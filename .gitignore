@@ -1,3 +1,6 @@
 work/
 tmp/
 *.vcd
+*.fst
+
+__pycache__
