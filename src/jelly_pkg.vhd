@@ -41,12 +41,21 @@ package jelly_pkg is
     constant COND_VS : std_logic_vector(3 downto 0) := "0111";
     constant COND_VC : std_logic_vector(3 downto 0) := "1000";
 
+    constant REG_A_SRC_RS : std_logic_vector(1 downto 0) := "00";
+    constant REG_A_SRC_RT : std_logic_vector(1 downto 0) := "01";
+    constant REG_A_SRC_RD : std_logic_vector(1 downto 0) := "10";
+
+    constant REG_B_SRC_RS : std_logic_vector(1 downto 0) := "00";
+    constant REG_B_SRC_RT : std_logic_vector(1 downto 0) := "01";
+    constant REG_B_SRC_RD : std_logic_vector(1 downto 0) := "10";
+
     -- ALU source selection
     constant ALU_A_SRC_REG_A : std_logic_vector(1 downto 0) := "00";
     constant ALU_A_SRC_REG_B : std_logic_vector(1 downto 0) := "01";
-    constant ALU_A_SRC_REG_C : std_logic_vector(1 downto 0) := "10";
+    constant ALU_A_SRC_IMM : std_logic_vector(1 downto 0) := "10";
 
-    constant ALU_B_SRC_REG_B : std_logic := '0';
-    constant ALU_B_SRC_IMM : std_logic := '1';
+    constant ALU_B_SRC_REG_A : std_logic_vector(1 downto 0) := "00";
+    constant ALU_B_SRC_REG_B : std_logic_vector(1 downto 0) := "01";
+    constant ALU_B_SRC_IMM : std_logic_vector(1 downto 0) := "10";
 
 end package jelly_pkg;

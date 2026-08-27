@@ -33,8 +33,10 @@ architecture main of jelly_16 is
 
     -- Decoder control lines
     signal reg_write : std_logic;
+    signal reg_a_src : std_logic_vector(1 downto 0);
+    signal reg_b_src : std_logic_vector(1 downto 0);
     signal alu_a_src : std_logic_vector(1 downto 0);
-    signal alu_b_src : std_logic;
+    signal alu_b_src : std_logic_vector(1 downto 0);
     signal alu_op : std_logic_vector(3 downto 0);
     signal mem_read : std_logic;
     signal mem_write : std_logic;
@@ -44,9 +46,10 @@ architecture main of jelly_16 is
     signal status_we : std_logic;
 
     -- Register file / writeback
+    signal rd_addr_a : std_logic_vector(JELLY_REG_BITS - 1 downto 0);
+    signal rd_addr_b : std_logic_vector(JELLY_REG_BITS - 1 downto 0);
     signal rd_data_a : std_logic_vector(JELLY_DATA_WIDTH - 1 downto 0);
     signal rd_data_b : std_logic_vector(JELLY_DATA_WIDTH - 1 downto 0);
-    signal rd_data_c : std_logic_vector(JELLY_DATA_WIDTH - 1 downto 0);
     signal wb_data : std_logic_vector(JELLY_DATA_WIDTH - 1 downto 0);
 
     -- ALU
@@ -129,6 +132,8 @@ begin
     port map (
         opcode => opcode,
         reg_write => reg_write,
+        reg_a_src => reg_a_src,
+        reg_b_src => reg_b_src,
         alu_a_src => alu_a_src,
         alu_b_src => alu_b_src,
         alu_op => alu_op,
@@ -153,6 +158,16 @@ begin
         rd_data_a  when opcode = OP_MOV                        else  -- register-to-register move
         alu_result;                                                  -- default is ALU output
 
+    rd_addr_a <=
+        rs_field when reg_a_src = REG_A_SRC_RS else
+        rt_field when reg_a_src = REG_A_SRC_RT else
+        rd_field;
+
+    rd_addr_b <=
+        rs_field when reg_b_src = REG_b_SRC_RS else
+        rt_field when reg_b_src = REG_b_SRC_RT else
+        rd_field;
+
     regfile_inst: entity work.regfile
     generic map (
         DATA_WIDTH => JELLY_DATA_WIDTH,
@@ -161,12 +176,10 @@ begin
     port map (
         clk => clk,
         rst => rst,
-        rd_addr_a => rs_field,
+        rd_addr_a => rd_addr_a,
         rd_data_a => rd_data_a,
-        rd_addr_b => rt_field,
+        rd_addr_b => rd_addr_b,
         rd_data_b => rd_data_b,
-        rd_addr_c => rd_field,
-        rd_data_c => rd_data_c,
         wr_en => reg_write,
         wr_addr => rd_field,
         wr_data => wb_data
@@ -205,8 +218,11 @@ begin
     alu_a <=
         rd_data_a when alu_a_src = ALU_A_SRC_REG_A else
         rd_data_b when alu_a_src = ALU_A_SRC_REG_B else
-        rd_data_c;
-    alu_b <= imm_value when alu_b_src = ALU_B_SRC_IMM else rd_data_b;
+        imm_value;
+    alu_b <=
+        rd_data_a when alu_b_src = ALU_B_SRC_REG_A else
+        rd_data_b when alu_b_src = ALU_B_SRC_REG_B else
+        imm_value;
 
     alu_inst: entity work.alu
     port map (

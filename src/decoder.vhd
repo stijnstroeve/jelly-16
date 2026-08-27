@@ -11,9 +11,12 @@ entity decoder is
 
         reg_write : out std_logic;
         alu_a_src : out std_logic_vector(1 downto 0);
-        alu_b_src : out std_logic;
+        alu_b_src : out std_logic_vector(1 downto 0);
         alu_op : out std_logic_vector(3 downto 0);
         
+        reg_a_src : out std_logic_vector(1 downto 0);
+        reg_b_src : out std_logic_vector(1 downto 0);
+
         status_we : out std_logic;
 
         mem_read : out std_logic;
@@ -34,6 +37,8 @@ begin
         reg_write <= '0';
         alu_a_src <= ALU_A_SRC_REG_A;
         alu_b_src <= ALU_B_SRC_REG_B;
+        reg_a_src <= REG_A_SRC_RS;
+        reg_b_src <= REG_A_SRC_RT;
         mem_read <= '0';
         mem_write <= '0';
         mem_to_reg <= '0';
@@ -87,9 +92,9 @@ begin
 
             when OP_ADDI =>
                 reg_write <= '1';
-                alu_op <= opcode(3 downto 0);
+                alu_op <= OP_ADD;
                 status_we <= '1';
-                alu_a_src <= ALU_A_SRC_REG_C;
+                reg_a_src <= REG_A_SRC_RD;
                 alu_b_src <= ALU_B_SRC_IMM;
 
             when OP_CMP =>

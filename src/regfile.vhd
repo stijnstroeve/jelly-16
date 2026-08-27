@@ -20,10 +20,6 @@ entity regfile is
         rd_addr_b : in std_logic_vector(ADDR_WIDTH - 1 downto 0);
         rd_data_b : out std_logic_vector(DATA_WIDTH - 1 downto 0);
 
-        -- read port C
-        rd_addr_c : in std_logic_vector(ADDR_WIDTH - 1 downto 0);
-        rd_data_c : out std_logic_vector(DATA_WIDTH - 1 downto 0);
-
         -- write port
         wr_en : in std_logic; -- 1 = write enabled
         wr_addr : in std_logic_vector(ADDR_WIDTH - 1 downto 0);
@@ -53,6 +49,5 @@ begin
     -- Write is synchronous, but reads are asynchronous
     rd_data_a <= regs(to_integer(unsigned(rd_addr_a)));
     rd_data_b <= regs(to_integer(unsigned(rd_addr_b)));
-    rd_data_c <= regs(to_integer(unsigned(rd_addr_c)));
 
 end architecture rtl;
