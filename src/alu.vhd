@@ -27,7 +27,7 @@ begin
     begin
         -- ALU / Data Path
         case op is
-            when OP_ADD =>
+            when OP_ADD | OP_ADDI =>
                 akku := resize(unsigned(a), DATA_WIDTH + 1) + resize(unsigned(b), DATA_WIDTH + 1);
             -- CMP is the same as SUB; the datapath discards the result and keeps only the flags.
             when OP_SUB | OP_CMP =>
@@ -38,8 +38,6 @@ begin
                 akku := resize(unsigned(a or b), DATA_WIDTH + 1);
             when OP_XOR =>
                 akku := resize(unsigned(a xor b), DATA_WIDTH + 1);
-            when OP_SHL =>
-                akku := resize(unsigned(a), DATA_WIDTH + 1) sll 1;
             when OP_SHR =>
                 akku := resize(unsigned(a), DATA_WIDTH + 1) srl 1;
             when others =>
@@ -59,7 +57,7 @@ begin
         c := akku(DATA_WIDTH); -- C
 
         case op is
-            when OP_ADD =>
+            when OP_ADD | OP_ADDI =>
                 -- Overflow if both inputs share a sign and the result flips it
                 if (a(DATA_WIDTH - 1) = b(DATA_WIDTH - 1)) and (res(DATA_WIDTH - 1) /= a(DATA_WIDTH - 1)) then
                     o := '1';

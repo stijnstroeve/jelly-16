@@ -10,10 +10,10 @@ OP = {
     "NOP": 0x0, "LDI": 0x1, "LUI": 0x2, "MOV": 0x3,
     "LOAD": 0x4, "STORE": 0x5, "JMP": 0x6, "HALT": 0x7,
     "ADD": 0x8, "SUB": 0x9, "AND": 0xA, "OR": 0xB,
-    "XOR": 0xC, "SHL": 0xD, "SHR": 0xE, "CMP": 0xF,
+    "XOR": 0xC, "ADDI": 0xD, "SHR": 0xE, "CMP": 0xF,
 }
 ALU_RRR = {"ADD", "SUB", "AND", "OR", "XOR"}
-ALU_SHIFT = {"SHL", "SHR"}
+ALU_SHIFT = {"SHR"}
 COND = {
     "ALWAYS": 0x0, "AL": 0x0,
     "EQ": 0x1, "Z": 0x1,
@@ -95,7 +95,7 @@ def encode(mnem, ops, line_numb, symbols):
         need(ops, 0, mnem, line_numb)
         return op << 12
 
-    if mnem in ("LDI", "LUI"):
+    if mnem in ("LDI", "LUI", "ADDI"):
         need(ops, 2, mnem, line_numb)
         rd = parse_reg(ops[0], line_numb)
         imm = parse_int(ops[1], line_numb, symbols)

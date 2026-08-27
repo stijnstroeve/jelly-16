@@ -33,7 +33,8 @@ architecture main of jelly_16 is
 
     -- Decoder control lines
     signal reg_write : std_logic;
-    signal alu_src : std_logic;
+    signal alu_a_src : std_logic_vector(1 downto 0);
+    signal alu_b_src : std_logic;
     signal alu_op : std_logic_vector(3 downto 0);
     signal mem_read : std_logic;
     signal mem_write : std_logic;
@@ -45,6 +46,7 @@ architecture main of jelly_16 is
     -- Register file / writeback
     signal rd_data_a : std_logic_vector(JELLY_DATA_WIDTH - 1 downto 0);
     signal rd_data_b : std_logic_vector(JELLY_DATA_WIDTH - 1 downto 0);
+    signal rd_data_c : std_logic_vector(JELLY_DATA_WIDTH - 1 downto 0);
     signal wb_data : std_logic_vector(JELLY_DATA_WIDTH - 1 downto 0);
 
     -- ALU
@@ -127,7 +129,8 @@ begin
     port map (
         opcode => opcode,
         reg_write => reg_write,
-        alu_src => alu_src,
+        alu_a_src => alu_a_src,
+        alu_b_src => alu_b_src,
         alu_op => alu_op,
         mem_read => mem_read,
         mem_write => mem_write,
@@ -162,6 +165,8 @@ begin
         rd_data_a => rd_data_a,
         rd_addr_b => rt_field,
         rd_data_b => rd_data_b,
+        rd_addr_c => rd_field,
+        rd_data_c => rd_data_c,
         wr_en => reg_write,
         wr_addr => rd_field,
         wr_data => wb_data
@@ -197,8 +202,11 @@ begin
     -- Also computes the condition flags (NZCV) for the status register
     -- When the source is set to immediate, the immediate value is used as the second operand; otherwise, the second register value is used.
     -------
-    alu_a <= rd_data_a;
-    alu_b <= imm_value when alu_src = ALU_SRC_IMM else rd_data_b;
+    alu_a <=
+        rd_data_a when alu_a_src = ALU_A_SRC_REG_A else
+        rd_data_b when alu_a_src = ALU_A_SRC_REG_B else
+        rd_data_c;
+    alu_b <= imm_value when alu_b_src = ALU_B_SRC_IMM else rd_data_b;
 
     alu_inst: entity work.alu
     port map (

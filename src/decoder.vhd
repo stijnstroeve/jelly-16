@@ -10,7 +10,8 @@ entity decoder is
         opcode : in std_logic_vector(OPCODE_BITS - 1 downto 0);
 
         reg_write : out std_logic;
-        alu_src : out std_logic;
+        alu_a_src : out std_logic_vector(1 downto 0);
+        alu_b_src : out std_logic;
         alu_op : out std_logic_vector(3 downto 0);
         
         status_we : out std_logic;
@@ -31,7 +32,8 @@ begin
     process (opcode) is
     begin
         reg_write <= '0';
-        alu_src <= ALU_SRC_REG;
+        alu_a_src <= ALU_A_SRC_REG_A;
+        alu_b_src <= ALU_B_SRC_REG_B;
         mem_read <= '0';
         mem_write <= '0';
         mem_to_reg <= '0';
@@ -47,12 +49,12 @@ begin
             when OP_LDI =>
                 -- Write the immediate operand into the destination register
                 reg_write <= '1';
-                alu_src <= ALU_SRC_IMM;
+                alu_b_src <= ALU_B_SRC_IMM;
 
             when OP_LUI =>
                 -- Same as LDI, but the datapath places the immediate in the upper byte
                 reg_write <= '1';
-                alu_src <= ALU_SRC_IMM;
+                alu_b_src <= ALU_B_SRC_IMM;
 
             when OP_MOV =>
                 -- Copy a source register into the destination register
@@ -78,10 +80,17 @@ begin
 
             -- ALU register-register operations. The low three opcode bits select
             -- the ALU function (see jelly_pkg) and the result is written back.
-            when OP_ADD | OP_SUB | OP_AND | OP_OR | OP_XOR | OP_SHL | OP_SHR =>
+            when OP_ADD | OP_SUB | OP_AND | OP_OR | OP_XOR | OP_SHR =>
                 reg_write <= '1';
                 alu_op <= opcode(3 downto 0);
                 status_we <= '1';
+
+            when OP_ADDI =>
+                reg_write <= '1';
+                alu_op <= opcode(3 downto 0);
+                status_we <= '1';
+                alu_a_src <= ALU_A_SRC_REG_C;
+                alu_b_src <= ALU_B_SRC_IMM;
 
             when OP_CMP =>
                 -- CMP only updates the flags, the ALU result is discarded.

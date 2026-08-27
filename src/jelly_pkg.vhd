@@ -26,7 +26,7 @@ package jelly_pkg is
     constant OP_AND : std_logic_vector(3 downto 0) := "1010";
     constant OP_OR : std_logic_vector(3 downto 0) := "1011";
     constant OP_XOR : std_logic_vector(3 downto 0) := "1100";
-    constant OP_SHL : std_logic_vector(3 downto 0) := "1101";
+    constant OP_ADDI : std_logic_vector(3 downto 0) := "1101";
     constant OP_SHR : std_logic_vector(3 downto 0) := "1110";
     constant OP_CMP : std_logic_vector(3 downto 0) := "1111";
 
@@ -42,7 +42,11 @@ package jelly_pkg is
     constant COND_VC : std_logic_vector(3 downto 0) := "1000";
 
     -- ALU source selection
-    constant ALU_SRC_REG : std_logic := '0';
-    constant ALU_SRC_IMM : std_logic := '1';
+    constant ALU_A_SRC_REG_A : std_logic_vector(1 downto 0) := "00";
+    constant ALU_A_SRC_REG_B : std_logic_vector(1 downto 0) := "01";
+    constant ALU_A_SRC_REG_C : std_logic_vector(1 downto 0) := "10";
+
+    constant ALU_B_SRC_REG_B : std_logic := '0';
+    constant ALU_B_SRC_IMM : std_logic := '1';
 
 end package jelly_pkg;

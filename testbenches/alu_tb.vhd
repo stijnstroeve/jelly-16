@@ -13,7 +13,7 @@ architecture sim of alu_tb is
     constant OP_AND : std_logic_vector(3 downto 0) := "1010";
     constant OP_OR : std_logic_vector(3 downto 0) := "1011";
     constant OP_XOR : std_logic_vector(3 downto 0) := "1100";
-    constant OP_SHL : std_logic_vector(3 downto 0) := "1101";
+    constant OP_ADDI : std_logic_vector(3 downto 0) := "1101";
     constant OP_SHR : std_logic_vector(3 downto 0) := "1110";
     constant OP_CMP : std_logic_vector(3 downto 0) := "1111";
 
@@ -96,10 +96,13 @@ begin
         check_op(OP_XOR, x"0001", x"0001", x"0000", "0100", "XOR 0x0001 ^ 0x0001");
         check_op(OP_XOR, x"0001", x"0000", x"0001", "0000", "XOR 0x0001 ^ 0x0000");
 
-        -- ===== Shift left =====
-        check_op(OP_SHL, "0000000000000001", x"0000", "0000000000000010", "0000", "SHL 0001 << 1");
-        check_op(OP_SHL, "1000000000000000", x"0000", "0000000000000000", "0110", "SHL 1000 << 1");
-        check_op(OP_SHL, "0111111111111111", x"0000", "1111111111111110", "1000", "SHL 0111 << 1");
+        -- ===== Add immediate =====
+        check_op(OP_ADDI, x"0001", x"0001", x"0002", "0000", "ADDI 1+1");
+        check_op(OP_ADDI, x"0000", x"0000", x"0000", "0100", "ADDI 0+0");
+        check_op(OP_ADDI, x"00FF", x"0001", x"0100", "0000", "ADDI 255+1");
+        check_op(OP_ADDI, x"1234", x"4321", x"5555", "0000", "ADDI 0x1234+0x4321");
+        check_op(OP_ADDI, x"FFFF", x"0001", x"0000", "0110", "ADDI overflow FFFF+1");
+        check_op(OP_ADDI, x"7FFF", x"0001", x"8000", "1001", "ADDI overflow 0x7FFF+1");
 
         -- ===== Shift right =====
         check_op(OP_SHR, "0000000000000010", x"0000", "0000000000000001", "0000", "SHR 0010 >> 1");
