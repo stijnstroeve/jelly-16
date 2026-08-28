@@ -3,11 +3,19 @@
 
 .text
 
-.equ MAX_OFFSET, 4
-.equ WORD_SIZE, 16
-.equ FRAME_BUFFER_OFF, 128
-.equ CHAR_GRID_WIDTH, 10
-.equ CHAR_GRID_MAX_HEIGHT, 20
+; .equ MAX_OFFSET, 4
+; .equ WORD_SIZE, 16
+; .equ FRAME_BUFFER_OFF, 128
+; .equ CHAR_GRID_WIDTH, 10
+; .equ CHAR_GRID_MAX_HEIGHT, 20
+
+; buffer_addr = 1000
+; screen_w = 32
+; screen_h = 60
+; line_h = 5
+.equ SCREEN_W, 32
+.equ SCREEN_H, 60
+.equ LINE_H, 5
 
 ; .equ FRAME_BUFFER_SIZE
 
@@ -48,6 +56,31 @@ program_start:
         ADD r3, r3, r1
         LOAD r3, [r3]
 
+        LDI r4, 0 ; i = 0
+        LDI r5, 0 ; y = 0
+loop_y:
+            NOP
+            LDI r6, 0 ; x = 0
+loop_x:
+                NOP
+                
+                ADDI r6, 1
+                CMP r3, r6 ; char_width - x
+                LDI r15, loop_x
+                JMP POS, r15 ; x > 0
+
+            ADDI r5, 1
+            LDI r15, LINE_H
+            CMP r15, r5 ; LINE_H - y
+            LDI r15, loop_y
+            JMP POS, r15 ; y > 0
+
+; loop_x:
+;                 LDI r6, 0 ; x = 0
+
+
+;                 ADDI r4, 1 ; i += 1
+                
 
 program_end:
         HALT
@@ -299,3 +332,6 @@ l_z:.word 1,1,1,1
 .word 0,1,0,0
 .word 1,1,1,1
 
+.org 2000
+frame_word_buffer:.word 0
+; Here is where the frame word buffer data starts
