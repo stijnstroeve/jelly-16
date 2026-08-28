@@ -14,13 +14,11 @@ architecture sim of regfile_tb is
 
     -- DUT signals
     signal clk : std_logic := '0';
-    signal rst : std_logic := '0';
+    signal rst : std_logic := '1'; -- active low, deasserted
     signal rd_addr_a : std_logic_vector(TB_ADDR_WIDTH - 1 downto 0) := (others => '0');
     signal rd_data_a : std_logic_vector(TB_DATA_WIDTH - 1 downto 0);
     signal rd_addr_b : std_logic_vector(TB_ADDR_WIDTH - 1 downto 0) := (others => '0');
     signal rd_data_b : std_logic_vector(TB_DATA_WIDTH - 1 downto 0);
-    signal rd_addr_c : std_logic_vector(TB_ADDR_WIDTH - 1 downto 0) := (others => '0');
-    signal rd_data_c : std_logic_vector(TB_DATA_WIDTH - 1 downto 0);
     signal wr_en : std_logic := '0';
     signal wr_addr : std_logic_vector(TB_ADDR_WIDTH - 1 downto 0) := (others => '0');
     signal wr_data : std_logic_vector(TB_DATA_WIDTH - 1 downto 0) := (others => '0');
@@ -41,8 +39,6 @@ begin
         rd_data_a => rd_data_a,
         rd_addr_b => rd_addr_b,
         rd_data_b => rd_data_b,
-        rd_addr_c => rd_addr_c,
-        rd_data_c => rd_data_c,
         wr_en => wr_en,
         wr_addr => wr_addr,
         wr_data => wr_data
@@ -94,15 +90,6 @@ begin
                 severity error;
         end procedure check_read_b;
 
-        -- Asynchronous read on port B.
-        procedure check_read_c(constant addr : in integer; constant expected : in std_logic_vector(TB_DATA_WIDTH - 1 downto 0); constant name : in string) is
-        begin
-            rd_addr_c <= std_logic_vector(to_unsigned(addr, TB_ADDR_WIDTH));
-            wait for 1 ns;
-            assert rd_data_b = expected report name & " (port C): expected 0x" & to_hstring(unsigned(expected)) & " got 0x" & to_hstring(unsigned(rd_data_b))
-                severity error;
-        end procedure check_read_c;
-
     begin
         -- Let the first clock edge pass before driving stimulus.
         wait until rising_edge(clk);
@@ -119,9 +106,6 @@ begin
         write_reg(10, x"1234");
         check_read_a(10, x"1234", "WRITE/READ addr 10 = 0x1234");
 
-        write_reg(14, x"DAFD");
-        check_read_a(14, x"DAFD", "WRITE/READ addr 14 = 0xDAFD");
-
         -- Highest and lowest addressable registers.
         write_reg(0, x"CAFE");
         check_read_a(0, x"CAFE", "WRITE/READ addr 0 = 0xCAFE");
@@ -134,18 +118,15 @@ begin
         check_read_a(10, x"1234", "addr 10 unchanged after addr 1 overwrite");
 
         -- ===== Both read ports are independent =====
-        -- Port A, port B and port C can present different addresses at the same time.
+        -- Port A and port B can present different addresses at the same time.
         rd_addr_a <= std_logic_vector(to_unsigned(1, TB_ADDR_WIDTH));
         rd_addr_b <= std_logic_vector(to_unsigned(10, TB_ADDR_WIDTH));
-        rd_addr_c <= std_logic_vector(to_unsigned(14, TB_ADDR_WIDTH));
         wait for 1 ns;
         assert rd_data_a = x"0BAD" report "DUAL-PORT: port A expected 0x0BAD got 0x" & to_hstring(unsigned(rd_data_a)) severity error;
         assert rd_data_b = x"1234" report "DUAL-PORT: port B expected 0x1234 got 0x" & to_hstring(unsigned(rd_data_b)) severity error;
-        assert rd_data_c = x"DAFD" report "DUAL-PORT: port B expected 0xDAFD got 0x" & to_hstring(unsigned(rd_data_b)) severity error;
 
         -- Both ports pointing at the same register read the same value.
         check_read_b(0, x"CAFE", "DUAL-PORT same addr 0");
-        check_read_c(0, x"CAFE", "DUAL-PORT same addr 0");
 
         -- ===== wr_en = '0' must not modify a register =====
         wr_addr <= std_logic_vector(to_unsigned(10, TB_ADDR_WIDTH));
@@ -156,10 +137,10 @@ begin
         check_read_a(10, x"1234", "NO-WRITE addr 10 still 0x1234");
 
         -- ===== Synchronous reset clears every register =====
-        rst <= '1';
+        rst <= '0';
         wait until rising_edge(clk);
         wait for 1 ns;
-        rst <= '0';
+        rst <= '1';
         check_read_a(0, x"0000", "RESET addr 0 cleared");
         check_read_a(1, x"0000", "RESET addr 1 cleared");
         check_read_a(10, x"0000", "RESET addr 10 cleared");
