@@ -163,21 +163,33 @@ def encode(mnem, ops, line_numb, symbols):
 
 
 def assemble(text):
-    symbols = {}
-    items = []
-    addr = 0
+    current_section = "text"
+    sections = {}
 
     raw_lines = text.splitlines()
 
+
+    def initialize_section(section_name):
+        sections[section_name] = {
+            "symbols": {},
+            "items": [],
+            "addr": 0,
+            "words": [],
+        }
+
+    initialize_section(current_section)
+
     def add_symbol(name, value, line_numb):
         key = name.upper()
-        if key in symbols:
+        if key in sections[current_section]["symbols"]:
             raise AssemblyError(line_numb, f"symbol '{name}' redefined")
         if key in OP or key in COND:
             raise AssemblyError(line_numb, f"'{name}' is a reserved word")
-        symbols[key] = value
+        sections[current_section]["symbols"][key] = value
 
     for line_numb, raw in enumerate(raw_lines, start=1):
+        section = sections[current_section]
+
         """Remove comments starting with ; or #"""
         line = raw
         for i, ch in enumerate(line):
@@ -193,7 +205,7 @@ def assemble(text):
             m = re.match(r"^([A-Za-z_.$][\w.$]*)\s*:\s*(.*)$", line)
             if not m:
                 break
-            add_symbol(m.group(1), addr, line_numb)
+            add_symbol(m.group(1), section["addr"], line_numb)
             line = m.group(2).strip()
         if not line:
             continue
@@ -204,46 +216,64 @@ def assemble(text):
 
         # . Directive handling
         if head.lower() == ".org":
-            target = parse_int(rest, line_numb, symbols)
-            if target < addr:
-                raise AssemblyError(line_numb, f".org {target} is before current address {addr}")
-            for _ in range(target - addr):
-                items.append((addr, "word", 0, line_numb))
-                addr += 1
+            target = parse_int(rest, line_numb, section["symbols"])
+            if target < section["addr"]:
+                raise AssemblyError(line_numb, f".org {target} is before current address {section['addr']}")
+            for _ in range(target - section["addr"]):
+                section["items"].append((section["addr"], "word", 0, line_numb))
+                section["addr"] += 1
             continue
 
         if head.lower() == ".word":
             for field in split_operands(rest):
-                items.append((addr, "word", field, line_numb))
-                addr += 1
+                section["items"].append((section["addr"], "word", field, line_numb))
+                section["addr"] += 1
             continue
 
         if head.lower() == ".equ":
             args = split_operands(rest) if "," in rest else rest.split(None, 1)
             if len(args) != 2:
                 raise AssemblyError(line_numb, ".equ expects: .equ NAME, VALUE")
-            add_symbol(args[0].strip(), parse_int(args[1], line_numb, symbols), line_numb)
+            add_symbol(args[0].strip(), parse_int(args[1], line_numb, section["symbols"]), line_numb)
+            continue
+
+        if head.lower() == ".data":
+            current_section = "data"
+            if current_section not in sections:
+                initialize_section(current_section)
+            continue
+
+        if head.lower() == ".text":
+            current_section = "text"
             continue
 
         # Instruction
         mnem = head.upper()
         if mnem not in OP:
             raise AssemblyError(line_numb, f"unknown mnemonic or directive '{head}'")
-        items.append((addr, "instr", (mnem, split_operands(rest)), line_numb))
-        addr += 1
+        section["items"].append((section["addr"], "instr", (mnem, split_operands(rest)), line_numb))
+        section["addr"] += 1
+
+    print(sections[current_section]["symbols"], sections[current_section]["items"])
 
     # Resolve symbols and encode
-    out = [0] * addr
-    for at, kind, payload, line_numb in items:
-        if kind == "instr":
-            mnem, ops = payload
-            out[at] = encode(mnem, ops, line_numb, symbols)
-        else:
-            val = payload if isinstance(payload, int) else parse_int(payload, line_numb, symbols)
-            if not -32768 <= val <= 65535:
-                raise AssemblyError(line_numb, f".word value {val} does not fit in 16 bits")
-            out[at] = val & WORD_MASK
-    return out
+    for section_name, section in sections.items():
+        symbols = section["symbols"]
+        items = section["items"]
+        addr = section["addr"]
+        out = [0] * addr
+        for at, kind, payload, line_numb in items:
+            if kind == "instr":
+                mnem, ops = payload
+                out[at] = encode(mnem, ops, line_numb, symbols)
+            else:
+                val = payload if isinstance(payload, int) else parse_int(payload, line_numb, symbols)
+                if not -32768 <= val <= 65535:
+                    raise AssemblyError(line_numb, f".word value {val} does not fit in 16 bits")
+                out[at] = val & WORD_MASK
+        sections[section_name]["words"] = out
+
+    return sections
 
 
 def main(argv=None):
@@ -254,21 +284,26 @@ def main(argv=None):
 
     with open(args.input, "r") as f:
         text = f.read()
-    out_path = args.output or re.sub(r"\.[^.]*$", "", args.input) + ".hex"
 
     try:
-        words = assemble(text)
+        sections = assemble(text)
     except AssemblyError as e:
         print(f"{args.input}:{e.line_numb}: error: {e.msg}", file=sys.stderr)
         return 1
 
-    lines = "".join(f"{w:04X}\n" for w in words)
-    with open(out_path, "w") as f:
-        f.write(lines)
-    print(f"wrote {len(words)} word(s) to {out_path}", file=sys.stderr)
+    base_path = out_path = args.output or re.sub(r"\.[^.]*$", "", args.input)
+    for section_name, section in sections.items():
+        lines = "".join(f"{w:04X}\n" for w in section["words"])
+
+        if section_name != "text":
+            out_path = f"{base_path}.{section_name}.hex"
+        else:
+            out_path = f"{base_path}.hex"
+
+        with open(out_path, "w") as f:
+            f.write(lines)
+        print(f"wrote {len(section['words'])} word(s) to {out_path}", file=sys.stderr)
     return 0
-
-
 
 if __name__ == "__main__":
     sys.exit(main())

@@ -17,3 +17,19 @@
 
 ;         LDI   r8, loop       ; Load address of loop
 ;         JMP   ALWAYS, r8     ; Jump back to loop
+
+; .data
+; .word 10, 20, 30, 40
+
+.text
+.word 0x1100
+.word 0x1201
+.word 0x1300
+.word 0x1400
+.word 0x8312
+.word 0x5043
+.word 0x3120
+.word 0x3230
+.word 0xD401
+.word 0x1804
+.word 0x6080
