@@ -1,7 +1,32 @@
 
-.data
 
-; .word 'H', 'A', 'L', 'L', 'O'
+
+.text
+
+.equ MAX_OFFSET, 4
+.equ WORD_SIZE, 16
+.equ FRAME_BUFFER_OFF, 128
+
+        LDI r1, 0 ; Read offset
+        LDI r2, 0 ; Value
+
+loop:
+        LOAD r3, [r1] ; Load data
+        ADD r2, r2, r2 ; Shift bit to the left by 1
+        ADD r2, r2, r3 ; Add value to r2
+        ADDI r1, 1 ; Add 1 to address
+
+        LDI r15, MAX_OFFSET
+        CMP r1, r15 ; Compare offset to max offset
+        LDI r15, loop
+        JMP NEQ, r15
+
+program_end:
+        HALT
+
+
+
+.data
 
 ; A
 .word 0,1,1,0
