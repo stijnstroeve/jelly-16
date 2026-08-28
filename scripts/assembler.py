@@ -254,8 +254,6 @@ def assemble(text):
         section["items"].append((section["addr"], "instr", (mnem, split_operands(rest)), line_numb))
         section["addr"] += 1
 
-    print(sections[current_section]["symbols"], sections[current_section]["items"])
-
     # Resolve symbols and encode
     for section_name, section in sections.items():
         symbols = section["symbols"]

@@ -17,7 +17,7 @@ begin
     dut: entity work.jelly_16
     generic map (
         PROG_FILE => "programs/game_of_life/game_of_life.hex",
-        DATA_FILE => "",
+        DATA_FILE => "programs/game_of_life/game_of_life.data.hex",
         MEM_ADDR_WIDTH => 8
     )
     port map (
