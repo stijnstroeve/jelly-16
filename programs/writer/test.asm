@@ -13,7 +13,7 @@
 ; screen_w = 32
 ; screen_h = 60
 ; line_h = 5
-.equ SCREEN_W, 32
+.equ SCREEN_W, 12
 .equ SCREEN_H, 60
 .equ LINE_H, 5
 
@@ -36,6 +36,8 @@
 
 program_start:
         LDI r0, 0 ; Char index
+        LDI r9, 0 ; Char offset X
+        LDI r10, 0 ; Char offset Y
         
         ; Load character
         LDI r1, char_buffer
@@ -57,6 +59,9 @@ program_start:
         LOAD r3, [r3]
 
         LDI r4, 0 ; i = 0
+        LDI r8, frame_word_buffer_addr
+        LOAD r8, [r8] ; buffer_addr = frame_word_buffer
+
         LDI r5, 0 ; y = 0
 loop_y:
             NOP
@@ -64,12 +69,25 @@ loop_y:
 loop_x:
                 NOP
                 
-                ADDI r6, 1
+                MOV r7, r2
+                ADD r7, r7, r4 ; cell_addr = char_addr + i
+                LOAD r7, [r7] ; check if the cell is set
+
+                STORE [r8], r7
+
+                ADDI r8, 1
+
+                ADDI r4, 1 ; i += 1
+                ADDI r6, 1 ; x += 1
                 CMP r3, r6 ; char_width - x
                 LDI r15, loop_x
                 JMP POS, r15 ; x > 0
 
-            ADDI r5, 1
+            ; Add screen width to buffer_addr
+            ADDI r8, SCREEN_W
+            SUB r8, r8, r3 ; Remove the character width from the buffer addres  
+
+            ADDI r5, 1 ; y += 1
             LDI r15, LINE_H
             CMP r15, r5 ; LINE_H - y
             LDI r15, loop_y
@@ -90,6 +108,7 @@ program_end:
 .data
 
 char_buffer:.word 'h','a','l','l','o',0
+frame_word_buffer_addr:.word frame_word_buffer
 
 .org 100
 
@@ -182,15 +201,21 @@ l_g:.word 0,1,1,1
     ; char_width = READ char_width_addr
     ; 
     ; i = 0
+    ; buffer_addr = frame_word_buffer
     ; for y < line_h
     ;   for x < char_width
     ;       char_pixel_set = LOAD char_addr + i
     ;       buffer_x = x + offset_pixel_x
     ;       buffer_y = y + offset_pixel_y
-    ;       buffer_index = buffer_x + buffer_y * screen_w
+
+    ;       buffer_addr += 1
+    
+        ;   buffer_index = buffer_x + buffer_y * screen_w
     ;       memory_addr = buffer_addr + buffer_index
     ;       STORE memory_addr, char_pixel_set
     ;       i += 1
+
+    ;   buffer_addr += screen_w
     ;
     ; offset_pixel_x += char_width
     ; if offset_pixel_x > screen_w
