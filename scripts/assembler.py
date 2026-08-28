@@ -48,6 +48,11 @@ def parse_int(tok, line_numb, symbols=None):
             val = int(t, 16)
         elif t.lower().startswith("0b"):
             val = int(t, 2)
+        elif t.lower().startswith("'"):
+            char = t[1:-1]
+            if len(char) != 1:
+                raise AssemblyError(line_numb, f"expected a single character in quotes, got '{tok}'")
+            val = ord(char)
         else:
             val = int(t, 10)
     except ValueError:
@@ -165,13 +170,12 @@ def encode(mnem, ops, line_numb, symbols):
 def assemble(text):
     current_section = "text"
     sections = {}
+    symbols = {}
 
     raw_lines = text.splitlines()
 
-
     def initialize_section(section_name):
         sections[section_name] = {
-            "symbols": {},
             "items": [],
             "addr": 0,
             "words": [],
@@ -181,11 +185,11 @@ def assemble(text):
 
     def add_symbol(name, value, line_numb):
         key = name.upper()
-        if key in sections[current_section]["symbols"]:
+        if key in symbols:
             raise AssemblyError(line_numb, f"symbol '{name}' redefined")
         if key in OP or key in COND:
             raise AssemblyError(line_numb, f"'{name}' is a reserved word")
-        sections[current_section]["symbols"][key] = value
+        symbols[key] = value
 
     for line_numb, raw in enumerate(raw_lines, start=1):
         section = sections[current_section]
@@ -216,7 +220,7 @@ def assemble(text):
 
         # . Directive handling
         if head.lower() == ".org":
-            target = parse_int(rest, line_numb, section["symbols"])
+            target = parse_int(rest, line_numb, symbols)
             if target < section["addr"]:
                 raise AssemblyError(line_numb, f".org {target} is before current address {section['addr']}")
             for _ in range(target - section["addr"]):
@@ -234,7 +238,7 @@ def assemble(text):
             args = split_operands(rest) if "," in rest else rest.split(None, 1)
             if len(args) != 2:
                 raise AssemblyError(line_numb, ".equ expects: .equ NAME, VALUE")
-            add_symbol(args[0].strip(), parse_int(args[1], line_numb, section["symbols"]), line_numb)
+            add_symbol(args[0].strip(), parse_int(args[1], line_numb, symbols), line_numb)
             continue
 
         if head.lower() == ".data":
@@ -256,7 +260,6 @@ def assemble(text):
 
     # Resolve symbols and encode
     for section_name, section in sections.items():
-        symbols = section["symbols"]
         items = section["items"]
         addr = section["addr"]
         out = [0] * addr

@@ -6,10 +6,15 @@
 .equ MAX_OFFSET, 4
 .equ WORD_SIZE, 16
 .equ FRAME_BUFFER_OFF, 128
+.equ CHAR_GRID_WIDTH, 10
+.equ CHAR_GRID_MAX_HEIGHT, 20
+
+; .equ FRAME_BUFFER_SIZE
 
         LDI r1, 0 ; Read offset
         LDI r2, 0 ; Value
 
+        LDI r12, l_index
 loop:
         LOAD r3, [r1] ; Load data
         ADD r2, r2, r2 ; Shift bit to the left by 1
@@ -28,92 +33,148 @@ program_end:
 
 .data
 
+; Charachter widths
+l_width:.word 4,4,4,4,4,4,4,4,1,4,4,4,4,4,4,4,4,4,4,3,4,3,5,4,3,4
+
+l_index:.word l_a,l_b,l_c,l_d,l_e,l_f,l_g,l_h,l_i,l_j,l_k,l_l,l_n,l_m,l_n,l_o,l_p,l_q,l_r,l_s,l_t,l_u,l_v,l_w,l_x,l_y,l_z
+
+; .word 'H','a','l','l','o'
+
+; .org 1000
+
 ; A
-.word 0,1,1,0
+l_a:.word 0,1,1,0
 .word 1,0,0,1
 .word 1,0,0,1
 .word 1,1,1,1
 .word 1,0,0,1
 
+; .word 'a','a','a','a'
+
+; .word 0,1,1,0,0,0,1,1,0,0,0,1,1,0,0,0,1,1,0,0
+; .word 1,0,0,1,0,1,0,0,1,0,1,0,0,1,0,1,0,0,1,0
+; .word 1,0,0,1,0,1,0,0,1,0,1,0,0,1,0,1,0,0,1,0
+; .word 1,1,1,1,0,1,1,1,1,0,1,1,1,1,0,1,1,1,1,0
+; .word 1,0,0,1,0 1,0,0,1,0,1,0,0,1,0 1,0,0,1,0
+
+; .word 0b0110001100011000, 0b1100100101001010, 0b0101001010010100, 0b1010010100101111, 0b0111101111011110, 0b1001010010100101, 0b0010000000000000
+
+; .word 0b
+
 ; B
-.word 1,1,1,0
+l_b:.word 1,1,1,0
 .word 1,0,0,1
 .word 1,1,1,0
 .word 1,0,0,1
 .word 1,1,1,0
 
 ; C
-.word 1,1,1,1
+l_c:.word 1,1,1,1
 .word 1,0,0,0
 .word 1,0,0,0
 .word 1,0,0,0
 .word 1,1,1,1
 
 ; D
-.word 1,1,1,0
+l_d:.word 1,1,1,0
 .word 1,0,0,1
 .word 1,0,0,1
 .word 1,0,0,1
 .word 1,1,1,0
 
 ; E
-.word 1,1,1,1
+l_e:.word 1,1,1,1
 .word 1,0,0,0
 .word 1,1,1,1
 .word 1,0,0,0
 .word 1,1,1,1
 
 ; F
-.word 1,1,1,1
+l_f:.word 1,1,1,1
 .word 1,0,0,0
 .word 1,1,1,0
 .word 1,0,0,0
 .word 1,0,0,0
 
 ; G
-.word 0,1,1,1
+l_g:.word 0,1,1,1
 .word 1,0,0,0
 .word 1,0,1,1
 .word 1,0,0,1
 .word 0,1,1,1
 
+; Pseudo
+; buffer_addr = 1000
+; screen_w = 32
+; screen_h = 60
+; line_h = 5
+
+; offset_pixel_x = 0
+; offset_pixel_y = 0
+
+; 
+; for char in chars
+    ; char = 'a' = 97
+    ; char_alfabetical_index = char - 97
+    ; char_addr_addr = l_index + char_alfabetical_index
+    ; char_addr = READ char_addr_addr
+    ; char_width_addr = l_width + char_addr_addr
+    ; char_width = READ char_width_addr
+    ; 
+    ; i = 0
+    ; for y < line_h
+    ;   for x < char_width
+    ;       char_pixel_set = LOAD char_addr + i
+    ;       buffer_x = x + offset_pixel_x
+    ;       buffer_y = y + offset_pixel_y
+    ;       buffer_index = buffer_x + buffer_y * screen_w
+    ;       memory_addr = buffer_addr + buffer_index
+    ;       STORE memory_addr, char_pixel_set
+    ;       i += 1
+    ;
+    ; offset_pixel_x += char_width
+    ; if offset_pixel_x > screen_w
+    ;    offset_pixel_x = 0
+    ;    offset_pixel_y += line_h
+    ;    offset_pixel_y += 1
+
 ; H
-.word 1,0,0,1
+l_h:.word 1,0,0,1
 .word 1,0,0,1
 .word 1,1,1,1
 .word 1,0,0,1
 .word 1,0,0,1
 
 ; I
-.word 1
+l_i:.word 1
 .word 1
 .word 1
 .word 1
 .word 1
 
 ; J
-.word 0,0,0,1
+l_j:.word 0,0,0,1
 .word 0,0,0,1
 .word 0,0,0,1
 .word 1,0,0,1
 .word 0,1,1,0
 
 ; K
-.word 1,0,0,1
+l_k:.word 1,0,0,1
 .word 1,0,1,0
 .word 1,1,0,0
 .word 1,0,1,0
 .word 1,0,0,1
 
 ; L
-.word 1,0,0,0
+l_l:.word 1,0,0,0
 .word 1,0,0,0
 .word 1,0,0,0
 .word 1,0,0,0
 .word 1,1,1,1
 
 ; M
-.word 1,0,0,1
+l_m:.word 1,0,0,1
 .word 1,1,1,1
 .word 1,0,0,1
 .word 1,0,0,1
@@ -121,95 +182,93 @@ program_end:
 
 
 ; N
-.word 1,0,0,1
+l_n:.word 1,0,0,1
 .word 1,1,0,1
 .word 1,0,1,1
 .word 1,0,0,1
 .word 1,0,0,1
 
 ; O
-.word 0,1,1,0
+l_o:.word 0,1,1,0
 .word 1,0,0,1
 .word 1,0,0,1
 .word 1,0,0,1
 .word 0,1,1,0
 
 ; P
-.word 0,1,1,0
+l_p:.word 0,1,1,0
 .word 1,0,0,1
 .word 1,1,1,0
 .word 1,0,0,0
 .word 0,0,0,0
 
 ; Q
-.word 0,1,1,0
+l_q:.word 0,1,1,0
 .word 1,0,0,1
 .word 1,0,0,1
 .word 1,0,1,1
 .word 0,1,1,0
 
 ; R
-.word 0,1,1,0
+l_r:.word 0,1,1,0
 .word 1,0,0,1
 .word 1,1,1,0
 .word 1,0,1,0
 .word 1,0,0,1
 
 ; S
-.word 0,1,1,1
+l_s:.word 0,1,1,1
 .word 1,0,0,0
 .word 0,1,1,1
 .word 0,0,0,1
 .word 1,1,1,0
 
 ; T
-.word 1,1,1
+l_t:.word 1,1,1
 .word 0,1,0
 .word 0,1,0
 .word 0,1,0
 .word 0,1,0
 
 ; U
-.word 1,0,0,1
+l_u:.word 1,0,0,1
 .word 1,0,0,1
 .word 1,0,0,1
 .word 1,0,0,1
 .word 0,1,1,0
 
 ; V
-.word 1,0,1
+l_v:.word 1,0,1
 .word 1,0,1
 .word 1,0,1
 .word 1,0,1
 .word 0,1,0
 
 ; W
-.word 1,0,1,0,1
+l_w:.word 1,0,1,0,1
 .word 1,0,1,0,1
 .word 1,0,1,0,1
 .word 1,0,1,0,1
 .word 0,1,0,1,0
 
 ; X
-.word 1,0,0,1
+l_x:.word 1,0,0,1
 .word 0,1,1,0
 .word 0,1,1,0
 .word 1,0,0,1
 .word 1,0,0,1
 
 ; Y
-.word 1,0,1
+l_y:.word 1,0,1
 .word 1,0,1
 .word 0,1,0
 .word 0,1,0
 .word 0,1,0
 
 ; Z
-.word 1,1,1,1
+l_z:.word 1,1,1,1
 .word 0,0,0,1
 .word 0,0,1,0
 .word 0,1,0,0
 .word 1,1,1,1
 
-; Charachter widths
-.word 4,4,4,4,4,4,4,4,1,4,4,4,4,4,4,4,4,4,4,3,4,3,5,4,3,4
