@@ -7,7 +7,7 @@ entity jelly_16 is
     generic (
         PROG_FILE : string := ""; -- instruction memory image (hex, one word per line)
         DATA_FILE : string := ""; -- data memory image
-        MEM_ADDR_WIDTH : integer := 8
+        MEM_ADDR_WIDTH : integer := 12
     );
     port (
         clk : in std_logic;
