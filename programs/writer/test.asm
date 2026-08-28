@@ -11,20 +11,43 @@
 
 ; .equ FRAME_BUFFER_SIZE
 
-        LDI r1, 0 ; Read offset
-        LDI r2, 0 ; Value
+;         LDI r1, 0 ; Read offset
+;         LDI r2, 0 ; Value
 
-        LDI r12, l_index
-loop:
-        LOAD r3, [r1] ; Load data
-        ADD r2, r2, r2 ; Shift bit to the left by 1
-        ADD r2, r2, r3 ; Add value to r2
-        ADDI r1, 1 ; Add 1 to address
+;         LDI r12, l_index
+; loop:
+;         LOAD r3, [r1] ; Load data
+;         ADD r2, r2, r2 ; Shift bit to the left by 1
+;         ADD r2, r2, r3 ; Add value to r2
+;         ADDI r1, 1 ; Add 1 to address
 
-        LDI r15, MAX_OFFSET
-        CMP r1, r15 ; Compare offset to max offset
-        LDI r15, loop
-        JMP NEQ, r15
+;         LDI r15, MAX_OFFSET
+;         CMP r1, r15 ; Compare offset to max offset
+;         LDI r15, loop
+;         JMP NEQ, r15
+
+program_start:
+        LDI r0, 0 ; Char index
+        
+        ; Load character
+        LDI r1, char_buffer
+        ADD r1, r1, r0
+        LOAD r1, [r1]
+
+        ; Subtract 97 (ascii a) to get the index of the letter
+        LDI r15, 97
+        SUB r1, r1, r15 ; We don't need the character itself anymore so we can overwrite it
+
+        ; Get the address for the character definition
+        LDI r2, l_index
+        ADD r2, r2, r1
+        LOAD r2, [r2]
+
+        ; Get the character width
+        LDI r3, l_width
+        ADD r3, r3, r1
+        LOAD r3, [r3]
+
 
 program_end:
         HALT
@@ -32,6 +55,10 @@ program_end:
 
 
 .data
+
+char_buffer:.word 'h','a','l','l','o',0
+
+.org 100
 
 ; Charachter widths
 l_width:.word 4,4,4,4,4,4,4,4,1,4,4,4,4,4,4,4,4,4,4,3,4,3,5,4,3,4
@@ -118,7 +145,7 @@ l_g:.word 0,1,1,1
     ; char_alfabetical_index = char - 97
     ; char_addr_addr = l_index + char_alfabetical_index
     ; char_addr = READ char_addr_addr
-    ; char_width_addr = l_width + char_addr_addr
+    ; char_width_addr = l_width + char_alfabetical_index
     ; char_width = READ char_width_addr
     ; 
     ; i = 0
