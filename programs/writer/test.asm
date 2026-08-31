@@ -35,14 +35,21 @@
 ;         JMP NEQ, r15
 
 program_start:
-        LDI r0, 0 ; Char index
+        LDI r0, 0 ; char_index = 0
         LDI r9, 0 ; offset_pixel_x = 0
         LDI r10, 0 ; offset_pixel_y = 0
         
+write_char:
         ; Load character
         LDI r1, char_buffer
         ADD r1, r1, r0
         LOAD r1, [r1]
+
+        ; If char = 0, end program
+        LDI r15, 0
+        CMP r1, r15
+        LDI r15, program_end
+        JMP EQ, r15
 
         ; Subtract 97 (ascii a) to get the index of the letter
         LDI r15, 97
@@ -58,6 +65,19 @@ program_start:
         ADD r3, r3, r1
         LOAD r3, [r3]
 
+        ; Check if the next pixel should be written to the next line
+        ADD r14, r9, r3 ; next_pixel_x = offset_pixel_x + char_width
+        LDI r15, SCREEN_W
+        CMP r14, r15 ; next_pixel_x - SCREEN_W
+        LDI r15, pixel_if_end
+        JMP NEG, r15
+        JMP EQ, r15
+
+        LDI r9, 0 ; offset_pixel_x = 0
+        LDI r15, LINE_H
+        ADD r10, r10, r15 ; offset_pixel_y += LINE_H
+
+pixel_if_end:
         LDI r4, 0 ; i = 0
         LDI r8, frame_word_buffer_addr
         LOAD r8, [r8] ; buffer_addr = frame_word_buffer
@@ -114,7 +134,11 @@ loop_x:
             CMP r15, r5 ; LINE_H - y
             LDI r15, loop_y
             JMP POS, r15 ; y > 0
-                
+
+        ADD r9, r9, r3 ; offset_pixel_x += char_width
+        ADDI r0, 1 ; char_index += 1
+        LDI r15, write_char
+        JMP ALWAYS, r15
 
 program_end:
         HALT
@@ -123,7 +147,7 @@ program_end:
 
 .data
 
-char_buffer:.word 'h','a','l','l','o',0
+char_buffer:.word 'h','a','l','l','o','o','o','o','t','e',0
 frame_word_buffer_addr:.word frame_word_buffer
 
 .org 100
