@@ -15,7 +15,9 @@
 ; line_h = 5
 .equ SCREEN_W, 32
 .equ SCREEN_H, 60
+.equ SCREEN_PIXELS, 1920 ; SCREEN_W * SCREEN_H
 .equ LINE_H, 5
+.equ WORD_SIZE, 16
 
 ; .equ FRAME_BUFFER_SIZE
 
@@ -35,6 +37,8 @@
 ;         JMP NEQ, r15
 
 program_start:
+
+write_chars:
         LDI r0, 0 ; char_index = 0
         LDI r9, 0 ; offset_pixel_x = 0
         LDI r10, 0 ; offset_pixel_y = 0
@@ -48,7 +52,7 @@ write_char:
         ; If char = 0, end program
         LDI r15, 0
         CMP r1, r15
-        LDI r15, program_end
+        LDI r15, write_frame_buffer
         JMP EQ, r15
 
         ; Subtract 97 (ascii a) to get the index of the letter
@@ -140,6 +144,67 @@ loop_x:
         LDI r15, write_char
         JMP ALWAYS, r15
 
+write_frame_buffer:
+        LDI r0, 0 ; frame_buffer_index = 0
+        LDI r1, frame_buffer_addr
+        LOAD r1, [r1]; frame_buffer_addr
+
+        LDI r2, 0 ; word_buffer_index = 0
+        LDI r3, frame_word_buffer_addr
+        LOAD r3, [r3]; word_buffer_addr
+
+        LDI r4, 0 ; word_bit_index = 0
+        LDI r5, 0 ; word_value = 0
+
+        LDI r6, 0
+
+loop_word_pixel:
+        ; word_value += *(word_buffer_addr + word_buffer_index)
+        ADD r6, r3, r2
+        LOAD r6, [r6]
+        ADD r5, r5, r6
+
+        ADD r5, r5, r5 ; word_value << 1
+
+        ADDI r2, 1 ; word_buffer_index += 1
+
+        LDI r15, 15
+        CMP r15, r2 ; SCREEN_PIXELS - word_buffer_index
+        LDI r15, loop_word_pixel
+        JMP POS, r15
+
+        ; Now that the word frame buffer has been filled, we need to convert it to an actual frame buffer
+        ; The frame buffer has 1 bit per pixel.
+        ; So here we convert 1 word per pixel to 1 bit per pixel.
+        
+        ; 2000: 0000 0000 0000 0001
+        ; 2001: 0000 0000 0000 0001
+        ; 2002: 0000 0000 0000 0001
+        ; 2003: 0000 0000 0000 0001
+        ; 2004: 0000 0000 0000 0000
+        ; res : 1111 0000 0000 0000
+
+        ; frame_buffer_addr = 1500
+        ; frame_buffer_index = 0
+
+        ; word_buffer_addr = 2000
+        ; word_buffer_index = 0
+
+        ; word_bit_index = 0
+        ; word_value = 0
+        ; 
+        ; for word_buffer_index < SCREEN_PIXELS
+            ; if word_bit_index = WORD_SIZE
+                ; word_bit_index = 0
+                ; *(frame_buffer_addr + frame_buffer_index) = word_value
+                ; frame_buffer_index += 1
+            ; 
+            ; word_value += *(word_buffer_addr + word_buffer_index)
+            ; word_value = word_value << 1
+
+            ; word_bit_index += 1
+            ; word_buffer_index += 1
+
 program_end:
         HALT
 
@@ -147,7 +212,8 @@ program_end:
 
 .data
 
-char_buffer:.word 'h','a','l','l','o','o','o','o','t','e',0
+char_buffer:.word 'h','a','l','l','o',0
+frame_buffer_addr:.word frame_buffer
 frame_word_buffer_addr:.word frame_word_buffer
 
 .org 100
@@ -396,6 +462,9 @@ l_z:.word 1,1,1,1
 .word 0,0,1,0
 .word 0,1,0,0
 .word 1,1,1,1
+
+.org 1500
+frame_buffer:.word 0
 
 .org 2000
 frame_word_buffer:.word 0
