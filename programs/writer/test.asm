@@ -15,7 +15,7 @@
 ; line_h = 5
 .equ SCREEN_W, 32
 .equ SCREEN_H, 60
-.equ SCREEN_PIXELS, 1920 ; SCREEN_W * SCREEN_H
+; .equ SCREEN_PIXELS, 1920 ; SCREEN_W * SCREEN_H
 .equ LINE_H, 5
 .equ WORD_SIZE, 16
 
@@ -159,16 +159,35 @@ write_frame_buffer:
         LDI r6, 0
 
 loop_word_pixel:
+        NOP
+
+word_end_if:
+        LDI r15, WORD_SIZE
+        CMP r15, r4
+        LDI r15, word_end_if_end
+        JMP NEQ, r15
+
+        ADD r7, r1, r0
+        STORE [r7], r5
+
+        LDI r5, 0 ; word_value = 0
+        LDI r4, 0 ; word_bit_index = 0
+        ADDI r0, 1
+word_end_if_end:
+
         ; word_value += *(word_buffer_addr + word_buffer_index)
+        ADD r5, r5, r5 ; word_value << 1
+       
         ADD r6, r3, r2
         LOAD r6, [r6]
         ADD r5, r5, r6
 
-        ADD r5, r5, r5 ; word_value << 1
 
         ADDI r2, 1 ; word_buffer_index += 1
+        ADDI r4, 1 ; word_bit_index += 1
 
-        LDI r15, 15
+        LDI r15, screen_pixels
+        LOAD r15, [r15]
         CMP r15, r2 ; SCREEN_PIXELS - word_buffer_index
         LDI r15, loop_word_pixel
         JMP POS, r15
@@ -212,7 +231,8 @@ program_end:
 
 .data
 
-char_buffer:.word 'h','a','l','l','o',0
+screen_pixels:.word 1920
+char_buffer:.word 'h','a','l','l','o','i','k','b','e','n','s','t','i','j','n',0
 frame_buffer_addr:.word frame_buffer
 frame_word_buffer_addr:.word frame_word_buffer
 
@@ -221,7 +241,7 @@ frame_word_buffer_addr:.word frame_word_buffer
 ; Charachter widths
 l_width:.word 4,4,4,4,4,4,4,4,1,4,4,4,4,4,4,4,4,4,4,3,4,3,5,4,3,4
 
-l_index:.word l_a,l_b,l_c,l_d,l_e,l_f,l_g,l_h,l_i,l_j,l_k,l_l,l_n,l_m,l_n,l_o,l_p,l_q,l_r,l_s,l_t,l_u,l_v,l_w,l_x,l_y,l_z
+l_index:.word l_a,l_b,l_c,l_d,l_e,l_f,l_g,l_h,l_i,l_j,l_k,l_l,l_m,l_n,l_o,l_p,l_q,l_r,l_s,l_t,l_u,l_v,l_w,l_x,l_y,l_z
 
 ; .word 'H','a','l','l','o'
 
