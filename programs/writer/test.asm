@@ -19,6 +19,9 @@
 .equ LINE_H, 5
 .equ WORD_SIZE, 16
 
+.equ PIXELS_BETWEEN_CHARS, 1
+.equ PIXELS_BETWEEN_LINES, 1
+
 ; .equ FRAME_BUFFER_SIZE
 
 ;         LDI r1, 0 ; Read offset
@@ -80,6 +83,8 @@ write_char:
         LDI r9, 0 ; offset_pixel_x = 0
         LDI r15, LINE_H
         ADD r10, r10, r15 ; offset_pixel_y += LINE_H
+        LDI r15, PIXELS_BETWEEN_LINES
+        ADD r10, r10, r15 ; offset_pixel_y += PIXELS_BETWEEN_LINES
 
 pixel_if_end:
         LDI r4, 0 ; i = 0
@@ -139,6 +144,8 @@ loop_x:
             LDI r15, loop_y
             JMP POS, r15 ; y > 0
 
+        LDI r15, PIXELS_BETWEEN_CHARS
+        ADD r9, r9, r15 ; offset_pixel_x += PIXELS_BETWEEN_CHARS
         ADD r9, r9, r3 ; offset_pixel_x += char_width
         ADDI r0, 1 ; char_index += 1
         LDI r15, write_char
