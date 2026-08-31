@@ -13,7 +13,7 @@
 ; screen_w = 32
 ; screen_h = 60
 ; line_h = 5
-.equ SCREEN_W, 12
+.equ SCREEN_W, 32
 .equ SCREEN_H, 60
 .equ LINE_H, 5
 
@@ -36,8 +36,8 @@
 
 program_start:
         LDI r0, 0 ; Char index
-        LDI r9, 0 ; Char offset X
-        LDI r10, 0 ; Char offset Y
+        LDI r9, 0 ; offset_pixel_x = 0
+        LDI r10, 0 ; offset_pixel_y = 0
         
         ; Load character
         LDI r1, char_buffer
@@ -71,11 +71,37 @@ loop_x:
                 
                 MOV r7, r2
                 ADD r7, r7, r4 ; cell_addr = char_addr + i
-                LOAD r7, [r7] ; check if the cell is set
+                LOAD r7, [r7] ; cell_set = *cell_addr
 
-                STORE [r8], r7
+                ADD r12, r6, r9 ; pixel_x = x + offset_pixel_x
+                ADD r13, r5, r10 ; pixel_y = y + offset_pixel_y
 
-                ADDI r8, 1
+                ; pixel_y * SCREEN_W
+                ; Sadly, I did not implement a multiply instruction in the CPU
+                ; And implementing a new for loop would take too much instructions for now.
+                ; 
+                ; As SCREEN_W is set to 32 (for now), we can just shift the
+                ; to the left 5 bits as a workaround. Which is the same as multiplying by 32.
+                ; Example:
+                ; SCREEN_W = 32
+                ; pixel_y = 5
+                ; result = pixel_y * SCREEN_W = 160
+                ; result = pixel_y << 5 (shift to left 5 bits) = 160
+                ;
+                ; Note: for this to work SCREEN_W must be multiple of two
+                ; When SCREEN_W changes the amount of ADD r13, r13, r13 needs to change
+                ; according to: log2(SCREEN_W)
+                ; 
+                ADD r13, r13, r13
+                ADD r13, r13, r13
+                ADD r13, r13, r13
+                ADD r13, r13, r13
+                ADD r13, r13, r13
+
+                ADD r12, r12, r13 ; pixel_index = pixel_x + pixel_y * SCREEN_W
+                ADD r12, r8, r12 ; pixel_addr = buffer_addr + pixel_index
+
+                STORE [r12], r7 ; *pixel_addr = cell_set
 
                 ADDI r4, 1 ; i += 1
                 ADDI r6, 1 ; x += 1
@@ -83,21 +109,11 @@ loop_x:
                 LDI r15, loop_x
                 JMP POS, r15 ; x > 0
 
-            ; Add screen width to buffer_addr
-            ADDI r8, SCREEN_W
-            SUB r8, r8, r3 ; Remove the character width from the buffer addres  
-
             ADDI r5, 1 ; y += 1
             LDI r15, LINE_H
             CMP r15, r5 ; LINE_H - y
             LDI r15, loop_y
             JMP POS, r15 ; y > 0
-
-; loop_x:
-;                 LDI r6, 0 ; x = 0
-
-
-;                 ADDI r4, 1 ; i += 1
                 
 
 program_end:
