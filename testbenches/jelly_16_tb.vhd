@@ -16,8 +16,8 @@ architecture sim of jelly_16_tb is
 begin
     dut: entity work.jelly_16
     generic map (
-        PROG_FILE => "programs/writer/test.hex",
-        DATA_FILE => "programs/writer/test.data.hex",
+        PROG_FILE => "programs/printer/printer.hex",
+        DATA_FILE => "programs/printer/printer.data.hex",
         MEM_ADDR_WIDTH => 12
     )
     port map (
