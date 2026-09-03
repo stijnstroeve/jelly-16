@@ -183,7 +183,11 @@ program_end:
 .data
 
 screen_pixels_data:.word SCREEN_PIXELS
-char_buffer:.word 'h','a','l','l','o',' ','i','k',' ','b','e','n',' ','s','t','i','j','n',0
+
+char_buffer:
+.word 'h','a','l','l','o',' '
+.word 'i','k',' ','b','e','n'
+.word 's','t','i','j','n',0
 
 frame_buffer_addr:.word frame_buffer
 frame_word_buffer_addr:.word frame_word_buffer
