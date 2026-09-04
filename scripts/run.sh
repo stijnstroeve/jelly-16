@@ -1,6 +1,10 @@
+#!/usr/bin/env bash
+# Analyze all sources and run a single testbench: ./scripts/run.sh <testbench>
+cd "$(dirname "$0")/.." &&
+mkdir -p output &&
 rm -rf work &&
 nvc --std=2008 --work=work -a src/jelly_pkg.vhd src/alu.vhd src/cond_matcher.vhd \
     src/decoder.vhd src/pc.vhd src/regfile.vhd src/sram.vhd src/sram_async.vhd \
     src/status_reg.vhd src/jelly_16.vhd testbenches/*.vhd &&
-nvc --std=2008 --work=work -e $1 -r --stop-time=300us \
-    --wave=output/$1.fst --format=fst --dump-arrays --exclude=":jelly_16_tb:dut:imem:*"
+nvc --std=2008 --work=work -e "$1" -r --stop-time=300us \
+    --wave="output/$1.fst" --format=fst --dump-arrays --exclude=":jelly_16_tb:dut:imem:*"

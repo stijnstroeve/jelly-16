@@ -1,0 +1,31 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Run testbenches
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Install nvc
+        uses: nickg/setup-nvc@v1
+        with:
+          version: 1.21.0
+
+      - name: Run all tests
+        run: ./scripts/test.sh
+
+      - name: Upload waveforms if failed
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: waveforms
+          path: output/*.fst
+          if-no-files-found: ignore
